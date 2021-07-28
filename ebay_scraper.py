@@ -6,6 +6,7 @@
 
 import requests
 from bs4 import BeautifulSoup
+import csv
 
 
 def get_page(url):
@@ -23,7 +24,7 @@ def get_detail_data(soup):
         title = soup.find('h1', id='itemTitle').text.strip('Details about   ')
     except:
         title = ''
-    print(title)
+    # print(title)
 
     try:
         price = soup.find('span', id="prcIsum")
@@ -31,14 +32,14 @@ def get_detail_data(soup):
         price = price.get('content')
     except:
         price = ''
-    print(price)
-    print(currency)
+    # print(price)
+    # print(currency)
 
     try:
         sold = soup.find('a', class_='vi-txt-underline').text.split(' ')[0]
     except:
         sold = ''
-    print(sold)
+    # print(sold)
 
     data = {
         'title': title,
@@ -50,8 +51,29 @@ def get_detail_data(soup):
     return data
 
 
+def get_index_data(soup):
+    try:
+        links = soup.find_all('a', class_='s-item__link')
+    except:
+        links = []
+
+    urls = [item.get('href') for item in links]
+
+    # print(urls)
+    return urls
+
+
+def write_csv(data, url):
+    with open('output.csv', 'a') as csvfile:
+        writer = csv.writer(csvfile)
+
+        row = [data['title'], data['price'], data['currency'], data['total_sold'], url]
+
+        writer.writerow(row)
+
+
 def main():
-    url = 'https://www.ebay.com/itm/233946842651?_trkparms=ispr%3D1&hash=item367851861b:g:KssAAOSwCChgYcVU&amdata=enc' \
+    """url = 'https://www.ebay.com/itm/233946842651?_trkparms=ispr%3D1&hash=item367851861b:g:KssAAOSwCChgYcVU&amdata=enc' \
           '%3AAQAGAAACkPYe5NmHp%252B2JMhMi7yxGiTJkPrKr5t53CooMSQt2orsSRAQR8FABHjfpFoyRlXhWmT2iBpHl3ge2CWMdbL5WaD' \
           '%252Ffw6H19aQ7V5PD6wt3PFs7W3U%252F1ywXmmdwmIr0W%252Bs%252B0qVqpS73t8pYSqpgEh2ciqfN' \
           '%252FOx9787i1zWmED6cnGeSEF24f7ttz2twb3sN6p6eBAl' \
@@ -66,9 +88,19 @@ def main():
           'WUMJ%252FNRPDl9AKbKE3OHjJtD2PEwXyvG2w%252BowhEfFvTZqHqg7pafHr' \
           'F6IaB%252FaqLi6rBhTUV0Z18iCqoHWdaXhJS5GUK1l42p3cl51inz%252FPlU' \
           '1agVJh7jpDHGQO49qQV99FSqXq3N4WWxVqYSXk%252FoxNxDElRygSczuy5hmOT' \
-          'b2XfpwmSQaYv3Ks1ampfbaI2mP7MJ5X2O6YqIO6%7Campid%3APL_CLK%7Cclp%3A2334524 '
+          'b2XfpwmSQaYv3Ks1ampfbaI2mP7MJ5X2O6YqIO6%7Campid%3APL_CLK%7Cclp%3A2334524 '"""
 
-    get_detail_data(get_page(url))
+    url = 'https://www.ebay.com/sch/i.html?_from=R40&_nkw=skmei+mens+waterproof&_sacat=0&LH_TitleDesc=0&_pgn=2'
+    # get_detail_data(get_page(url))
+    # get_index_data(get_page(url))
+    products = get_index_data(get_page(url))
+
+    for link in products:
+        try:
+            data = get_detail_data(get_page(link))
+            write_csv(data, link)
+        except:
+            print('no data')
 
 
 if __name__ == '__main__':
